@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squarespace Embedding Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #8C1045;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .note {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Assessment Center: Squarespace Embedding Guide</h1>
+    
+    <h2>Overview</h2>
+    <p>This guide explains how to embed the Assessment Center into your Squarespace website. The Assessment Center consists of two parts:</p>
+    <ol>
+        <li>A backend server that handles the AI interactions</li>
+        <li>Frontend code that you'll embed in your Squarespace site</li>
+    </ol>
+
+    <h2>Step 1: Deploy the Backend</h2>
+    <p>Before embedding the frontend into Squarespace, you need to deploy the backend server. You have several options:</p>
+    
+    <h3>Option A: Deploy on Replit (Recommended)</h3>
+    <ol>
+        <li>Log in to your Replit account</li>
+        <li>Create a new Repl using the Python template</li>
+        <li>Upload all the files from the <code>new_implementation</code> folder</li>
+        <li>Add your OpenAI API key as an environment variable:
+            <ul>
+                <li>Click on "Secrets" in the tools panel</li>
+                <li>Add a new secret with key <code>OPENAI_API_KEY</code> and your API key as the value</li>
+            </ul>
+        </li>
+        <li>Run the Repl to start the server</li>
+        <li>Note the URL of your Repl (e.g., <code>https://assessment-center.yourusername.repl.co</code>)</li>
+    </ol>
+    
+    <h3>Option B: Deploy on Another Platform</h3>
+    <p>You can also deploy the backend on platforms like Heroku, Render, or Vercel. The process will vary by platform, but you'll need to:</p>
+    <ol>
+        <li>Create a new project/app on your chosen platform</li>
+        <li>Upload the files from the <code>new_implementation</code> folder</li>
+        <li>Set the <code>OPENAI_API_KEY</code> environment variable</li>
+        <li>Deploy the application</li>
+        <li>Note the URL of your deployed application</li>
+    </ol>
+
+    <h2>Step 2: Prepare the Frontend for Embedding</h2>
+    <p>You need to modify the frontend files to point to your deployed backend:</p>
+    
+    <h3>1. Modify the API Base URL</h3>
+    <p>In both <code>index.html</code> and <code>quiz.html</code>, find the line that sets the API base URL and change it to your backend URL:</p>
+    
+    <p>In <code>quiz.html</code>, find:</p>
+    <pre>const API_BASE_URL = window.location.origin; // Use relative URL for local development</pre>
+    
+    <p>Change it to:</p>
+    <pre>const API_BASE_URL = 'https://your-backend-url.com'; // Replace with your actual backend URL</pre>
+    
+    <div class="note">
+        <p><strong>Note:</strong> Make sure to use the full URL including https:// and remove any trailing slashes.</p>
+    </div>
+
+    <h2>Step 3: Embed in Squarespace</h2>
+    
+    <h3>Method 1: Using Code Blocks (Recommended)</h3>
+    <ol>
+        <li>Log in to your Squarespace account and go to the page where you want to add the Assessment Center</li>
+        <li>Add a "Code" block to your page</li>
+        <li>Copy the entire content of the modified <code>index.html</code> file and paste it into the Code block</li>
+        <li>Save your changes</li>
+        <li>Create a new page for the quiz</li>
+        <li>Add a "Code" block to this page</li>
+        <li>Copy the entire content of the modified <code>quiz.html</code> file and paste it into the Code block</li>
+        <li>Save your changes</li>
+    </ol>
+    
+    <h3>Method 2: Using External Files and iframes</h3>
+    <p>If you prefer to host the HTML files externally:</p>
+    <ol>
+        <li>Upload the modified HTML files to a file hosting service or to your backend server</li>
+        <li>Add an "Embed" block to your Squarespace page</li>
+        <li>Use an iframe to embed the hosted HTML files:
+            <pre>&lt;iframe src="https://your-hosted-file-url.com/index.html" style="width:100%; height:600px; border:none;"&gt;&lt;/iframe&gt;</pre>
+        </li>
+    </ol>
+    
+    <div class="warning">
+        <p><strong>Important:</strong> If you use the iframe method, you'll need to ensure your backend server has proper CORS headers set to allow embedding.</p>
+    </div>
+
+    <h2>Step 4: Test the Embedded Assessment Center</h2>
+    <ol>
+        <li>Visit your Squarespace page where you embedded the Assessment Center</li>
+        <li>Select a test from the list</li>
+        <li>Verify that the quiz loads correctly and you can answer questions</li>
+        <li>Complete a test to ensure results are displayed properly</li>
+    </ol>
+
+    <h2>Troubleshooting</h2>
+    <h3>Common Issues:</h3>
+    <ul>
+        <li><strong>CORS Errors:</strong> If you see errors in the browser console about CORS, ensure your backend server is configured to allow requests from your Squarespace domain.</li>
+        <li><strong>API Key Issues:</strong> If tests aren't starting, check that your OpenAI API key is correctly set as an environment variable on your backend.</li>
+        <li><strong>Styling Conflicts:</strong> If the Assessment Center doesn't look right, Squarespace's CSS might be interfering. Try adding more specific CSS selectors to the embedded code.</li>
+    </ul>
+
+    <h2>Customization</h2>
+    <p>You can customize the appearance of the Assessment Center by modifying the CSS in the HTML files before embedding them. The primary color is currently set to <code>#8C1045</code>, which you can change to match your Squarespace theme.</p>
+</body>
+</html>
