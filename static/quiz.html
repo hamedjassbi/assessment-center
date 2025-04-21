@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Center - Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #8C1045;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            color: #333;
+            margin: 20px 0;
+        }
+        .test-title {
+            color: #8C1045;
+            font-size: 1.5rem;
+            text-align: center;
+            margin: 0 0 10px 0;
+        }
+        .question-box {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-left: 4px solid #8C1045;
+            background-color: #f9f9f9;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #8C1045;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-align: left;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .option-button:hover {
+            background-color: #721037;
+            transform: translateY(-2px);
+        }
+        .option-button:active {
+            transform: translateY(0);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #8C1045;
+        }
+        .spinner {
+            border: 4px solid rgba(140, 16, 69, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #8C1045;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #d9534f;
+            background-color: #f9f2f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .results {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            align-self: center;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px 0;
+            }
+            .test-title {
+                font-size: 1.3rem;
+            }
+            .question-box {
+                font-size: 1.1rem;
+            }
+            .option-button {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="test-title" id="test-title">Loading Test...</h1>
+        
+        <div id="content-area">
+            <div class="loading" id="loading-indicator">
+                <div class="spinner"></div>
+                <p>Preparing your test...</p>
+            </div>
+            
+            <div id="question-area" style="display: none;">
+                <div class="question-box" id="question-box"></div>
+                <div class="options" id="options-box"></div>
+            </div>
+            
+            <div id="results-area" style="display: none;">
+                <div class="results" id="results-content"></div>
+                <button class="back-button" onclick="goToHome()">Take Another Test</button>
+            </div>
+            
+            <div id="error-area" style="display: none;">
+                <div class="error-message" id="error-message"></div>
+                <button class="back-button" onclick="goToHome()">Go Back</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = window.location.origin; // Use relative URL for local development
+        let threadId = null;
+        let testName = '';
+        
+        // Get test name from URL parameters
+        function getTestName() {
+            const urlParams = new URLSearchParams(window.location.search);
+            testName = urlParams.get('test') || localStorage.getItem('selectedTest') || 'Unknown Test';
+            document.getElementById('test-title').innerText = testName;
+            return testName;
+        }
+        
+        // Show/hide different areas
+        function showArea(areaId) {
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('question-area').style.display = 'none';
+            document.getElementById('results-area').style.display = 'none';
+            document.getElementById('error-area').style.display = 'none';
+            
+            document.getElementById(areaId).style.display = 'block';
+        }
+        
+        // Display error message
+        function showError(message) {
+            document.getElementById('error-message').innerText = message;
+            showArea('error-area');
+        }
+        
+        // Start the quiz
+        async function startQuiz() {
+            showArea('loading-indicator');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ test: testName }),
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                threadId = data.thread_id;
+                
+                // Display the question and options
+                displayQuestion(data.question, data.options);
+                
+            } catch (error) {
+                console.error("Failed to start quiz:", error);
+                showError(`Failed to start the test: ${error.message}. Please try again later.`);
+            }
+        }
+        
+        // Display question and options
+        function displayQuestion(question, options) {
+            const questionBox = document.getElementById('question-box');
+            const optionsBox = document.getElementById('options-box');
+            
+            // Clear previous options
+            optionsBox.innerHTML = '';
+            
+            // Set question text
+            questionBox.innerText = question;
+            
+            // Create option buttons
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.innerText = option;
+                button.onclick = () => sendAnswer(option);
+                optionsBox.appendChild(button);
+            });
+            
+            // Show question area
+            showArea('question-area');
+        }
+        
+        // Send user's answer
+        async function sendAnswer(answer) {
+            if (!threadId) {
+                showError("Session error. Please restart the test.");
+                return;
+            }
+            
+            showArea('loading-indicator');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/quiz`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        thread_id: threadId,
+                        message: answer
+                    }),
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Check if this is the final results
+                if (data.is_results) {
+                    displayResults(data.full_response);
+                } else {
+                    // Continue with next question
+                    displayQuestion(data.question, data.options);
+                }
+                
+            } catch (error) {
+                console.error("Failed to process answer:", error);
+                showError(`Error processing your answer: ${error.message}. Please try again.`);
+            }
+        }
+        
+        // Display final results
+        function displayResults(resultsText) {
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerText = resultsText;
+            showArea('results-area');
+        }
+        
+        // Go back to home page
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+        
+        // Check if we're in an iframe (embedded in Squarespace)
+        function adjustForEmbedding() {
+            if (window.self !== window.top) {
+                // We're in an iframe
+                document.body.style.minHeight = 'auto';
+                document.body.style.height = 'auto';
+                
+                // Send height to parent for proper iframe sizing
+                setInterval(() => {
+                    const height = document.body.scrollHeight;
+                    window.parent.postMessage({ type: 'resize', height: height }, '*');
+                }, 500);
+            }
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            getTestName();
+            startQuiz();
+            adjustForEmbedding();
+        };
+    </script>
+</body>
+</html>
