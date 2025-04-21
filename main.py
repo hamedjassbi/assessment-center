@@ -24,7 +24,7 @@ except (FileNotFoundError, json.JSONDecodeError, KeyError):
     print(f"Using default Assistant ID: {ASSISTANT_ID}")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=OPENAI_API_KEY, base_url="https://api.openai.com/v1") 
 
 @app.route('/')
 def serve_index():
